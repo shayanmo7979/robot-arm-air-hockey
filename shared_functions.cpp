@@ -114,3 +114,22 @@ Vec2 Normalize(Vec2 a) {
 	return { a.x / L, a.y / L };
 }
 
+enum PhysicsEvent {EV_NON, EV_WALL_HIT, EV_MALLET_HIT, EV_GOAL_HUMAN, EV_GOAL_ROBOT};
+enum WallId {WALL_LEF, WALL_RIGHT, WALL_TOP, WALL_BOTTOM};
+
+struct TableConfig {
+	double width, height, goalWidth;
+	double wallRestitution, friction, maxPuckSpeed;
+	double puckRadius, malletRadius, malletRestitution, maxHumanSpeed;
+};
+
+struct PuckState { Vec2 pos, vel; double radius; };
+struct MalletState { Vec2 pos, vel; double radius; };
+
+struct PredictResult { bool found; Vec2 point; double time; };
+
+struct GameState {
+	PuckState puck;
+	MalletState human, robot;
+	int humanScore, robotScore;
+};

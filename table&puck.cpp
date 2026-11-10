@@ -17,11 +17,29 @@ struct PuckState{
 };
 
 class Puck {
-public:
+public:	
+
 	PuckState s;
 
-	void Reset(Vec2 startPos);
-	void Update(double dt);
-	void Draw(); const
+	void Reset(Vec2 startPos) {
+		// Reset (Set position to table center)
+	}
+
+	void Update(double dt) {
+		// 1. Friction slows the puck
+		// s.vel = s.vel * max(0, 1 - cfg.friction * dt)
+
+		// 2. Cap the speed
+		// IF Length(s.vel) > cfg.maxPuckSpeed  --> s.vel = Normalize(s.vel) * cfg.maxPuckSpeed
+
+		// 3. Move
+		// s.pos = s.pos + s.vel * dt
+
+		// 4. Check walls and goals return what happened
+		// RETURN HandleWalls(cfg)
+	}
+	void Draw() const {
+		// Draw the puck as a circle at its current position
+	}
 };
 
