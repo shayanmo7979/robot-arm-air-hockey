@@ -1291,6 +1291,10 @@ YsSoundPlayer::Stream::~Stream()
 
 
 
+// Windows (DirectSound) backend. On macOS the backend comes from
+// yssimplesound_macosx_cpp.cpp / yssimplesound_macosx_objc.m instead.
+#ifdef _WIN32
+
 #include <algorithm>
 
 #include <stdio.h>
@@ -2193,3 +2197,5 @@ YSRESULT YsSoundPlayer::AddNextStreamingSegmentAPISpecific(Stream &stream,const 
 	}
 	return YSERR;
 }
+
+#endif // _WIN32
