@@ -7,8 +7,27 @@
 
 #include "fssimplewindow.h"
 #include "ysglfontdata.h"
+#include "shared_types.h"
 
 const double PI = 3.1415926;	// value of pi
+
+Vec2 operator+(Vec2 a, Vec2 b) { return { a.x + b.x, a.y + b.y }; }
+Vec2 operator-(Vec2 a, Vec2 b) { return { a.x - b.x, a.y - b.y }; }
+Vec2 operator*(Vec2 a, Vec2 b) { return { a.x * b.x, a.y * b.y }; }
+Vec2 operator*(Vec2 a, double s) { return { a.x * s, a.y * s }; }
+
+double Dot(Vec2 a, Vec2 b) { return a.x * b.x + a.y * b.y; }
+double Length(Vec2 a) { return sqrt(a.x * a.x + a.y * a.y); }
+
+Vec2 Normalize(Vec2 a) {
+	double L = Length(a);
+	if (L == 0) return { 0, 0 };
+	return { a.x / L, a.y / L };
+}
+
+double Clamp(double v, double lo, double hi) {
+	return v < lo ? lo : (v > hi ? hi : v);
+}
 
 // Draw a filled circle at (cx, cy) of radius rad
 void DrawCircle(double cx, double cy, double rad) {
@@ -80,56 +99,3 @@ void DrawQuad(double x1, double y1, double x2, double y2,
 double RandRange(double min, double max) {
 	return min + double(rand()) * (max - min) / RAND_MAX;
 }
-
-class Vec2 {
-public:
-	double x, y;
-};
-
-Vec2 operator+(Vec2 a, Vec2 b) {
-	return {a.x + b.x, a.y + b.y};
-}
-
-Vec2 operator-(Vec2 a, Vec2 b) {
-	return { a.x - b.x, a.y - b.y };
-}
-
-Vec2 operator*(Vec2 a, Vec2 b) {
-	return { a.x * b.x, a.y * b.y };
-}
-
-double Dot(Vec2 a, Vec2 b) {
-	return a.x * b.x + a.y * b.y;
-}
-
-double Length(Vec2 a) {
-	return sqrt(a.x * a.x + a.y * a.y);
-}
-
-Vec2 Normalize(Vec2 a) {
-	double L = Length(a);
-	if (L == 0) {
-		return { 0, 0 };
-	}
-	return { a.x / L, a.y / L };
-}
-
-enum PhysicsEvent {EV_NON, EV_WALL_HIT, EV_MALLET_HIT, EV_GOAL_HUMAN, EV_GOAL_ROBOT};
-enum WallId {WALL_LEF, WALL_RIGHT, WALL_TOP, WALL_BOTTOM};
-
-struct TableConfig {
-	double width, height, goalWidth;
-	double wallRestitution, friction, maxPuckSpeed;
-	double puckRadius, malletRadius, malletRestitution, maxHumanSpeed;
-};
-
-struct PuckState { Vec2 pos, vel; double radius; };
-struct MalletState { Vec2 pos, vel; double radius; };
-
-struct PredictResult { bool found; Vec2 point; double time; };
-
-struct GameState {
-	PuckState puck;
-	MalletState human, robot;
-	int humanScore, robotScore;
-};
