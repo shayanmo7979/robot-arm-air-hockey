@@ -7,3 +7,11 @@ build/
 .vscode/
 .idea/
 ~$*
+
+# macOS-only build setup (kept locally, not in the repo)
+Makefile
+lib/fsmacosxwrappercpp.cpp
+lib/fsmacosxwrapperobjc.m
+lib/fssimplewindowcommon.cpp
+lib/yssimplesound_macosx_cpp.cpp
+lib/yssimplesound_macosx_objc.m
