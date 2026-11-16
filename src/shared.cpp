@@ -7,14 +7,13 @@
 
 #include "fssimplewindow.h"
 #include "ysglfontdata.h"
-#include "shared_types.h"
-
-const double PI = 3.1415926;	// value of pi
+#include "shared.h"
 
 Vec2 operator+(Vec2 a, Vec2 b) { return { a.x + b.x, a.y + b.y }; }
 Vec2 operator-(Vec2 a, Vec2 b) { return { a.x - b.x, a.y - b.y }; }
 Vec2 operator*(Vec2 a, Vec2 b) { return { a.x * b.x, a.y * b.y }; }
 Vec2 operator*(Vec2 a, double s) { return { a.x * s, a.y * s }; }
+Vec2 operator/(Vec2 a, double s) { return { a.x / s, a.y / s }; }
 
 double Dot(Vec2 a, Vec2 b) { return a.x * b.x + a.y * b.y; }
 double Length(Vec2 a) { return sqrt(a.x * a.x + a.y * a.y); }

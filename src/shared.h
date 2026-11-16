@@ -1,5 +1,7 @@
 #pragma once
 
+const double PI = 3.14159265358979;	// value of pi
+
 class Vec2 {
 public:
 	double x, y;
@@ -7,6 +9,7 @@ public:
 
 // Inputs to game flow to tell it what to do or what sounds to play
 enum PhysicsEvent { EV_NONE, EV_WALL_HIT, EV_MALLET_HIT, EV_GOAL_HUMAN, EV_GOAL_ROBOT };
+enum Difficulty { EASY, MEDIUM, HARD };
 
 // Table parameters
 // Restitution is how much momentum is maintained following the collision (not perfectly elastic)
@@ -32,6 +35,7 @@ Vec2 operator+(Vec2 a, Vec2 b);
 Vec2 operator-(Vec2 a, Vec2 b);
 Vec2 operator*(Vec2 a, Vec2 b);
 Vec2 operator*(Vec2 a, double s);     
+Vec2 operator/(Vec2 a, double s);     
 double Dot(Vec2 a, Vec2 b);
 double Length(Vec2 a);
 Vec2 Normalize(Vec2 a);
