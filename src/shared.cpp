@@ -13,6 +13,7 @@ Vec2 operator+(Vec2 a, Vec2 b) { return { a.x + b.x, a.y + b.y }; }
 Vec2 operator-(Vec2 a, Vec2 b) { return { a.x - b.x, a.y - b.y }; }
 Vec2 operator*(Vec2 a, Vec2 b) { return { a.x * b.x, a.y * b.y }; }
 Vec2 operator*(Vec2 a, double s) { return { a.x * s, a.y * s }; }
+Vec2 operator/(Vec2 a, Vec2 b) { return { a.x / b.x, a.y / b.y }; }
 Vec2 operator/(Vec2 a, double s) { return { a.x / s, a.y / s }; }
 
 double Dot(Vec2 a, Vec2 b) { return a.x * b.x + a.y * b.y; }
