@@ -15,3 +15,16 @@ private:
 	PhysicsEvent WallBounce(const TableConfig& cfg);
 	bool CollideWithMallet(const MalletState& m, const TableConfig& cfg);
 };
+
+class Table {
+private:
+	TableConfig cfg;       // width, height, goalWidth, friction, restitution, radii...
+	double ox, oy;         // where the table's top-left corner sits on screen (margin)
+
+public:
+	Table();
+	const TableConfig& GetConfig() const;
+	double GoalLeft() const;     // optional helpers
+	double GoalRight() const;
+	void Draw(double ox, double oy) const;
+};

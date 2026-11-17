@@ -124,10 +124,74 @@ PhysicsEvent Puck::Update(double dt, const TableConfig &cfg) {
 	return WallBounce(cfg);
 }
 
+bool Puck::CollideWithMallet(const MalletState& m, const TableConfig& cfg) {
+	Vec2 d = s.pos - m.pos;
+	double dist = Length(d);
+	double minDist = s.radius + m.radius;
+
+	// No collision
+	if (dist >= minDist) return false;
+
+	Vec2 n = (dist == 0) ? Vec2{ 0, 1 } : d * (1.0 / dist);   // from mallet to puck
+	s.pos = m.pos + n * minDist;                             // push out of overlap
+	double vn = Dot(s.vel - m.vel, n);                       // closing speed along the normal
+	if (vn < 0) s.vel = s.vel - n * ((1 + cfg.malletRestitution) * vn);
+	return true;
+}
+
 void Puck::Draw() const {
 	// Draw the puck as a circle at its current position
 	glColor3ub(0, 0, 0);
 	DrawCircle(s.pos.x, s.pos.y, s.radius);
 }
 
+Table::Table() {
+	ox = 50;
+	oy = 50;
+}
 
+const TableConfig& Table::GetConfig() const { return cfg; }
+
+double Table::GoalLeft() const { return cfg.width / 2 - cfg.goalWidth / 2; }
+
+double Table::GoalRight() const { return cfg.width / 2 + cfg.goalWidth / 2; }
+
+void Table::Draw(double ox, double oy) const {
+	glColor3ub(0, 0, 0);
+	glLineWidth(4.0f);
+	glBegin(GL_LINES);
+
+	double w = cfg.width, double h = cfg.height;
+	double gl = GoalLeft();
+	double gr = GoalRight();
+	
+	// Top
+	glVertex2d(ox, oy);
+	glVertex2d(gl, oy);
+	glVertex2d(gr
+	glVertex2d(ox + w, oy);
+
+	// Bottom
+	glVertex2d(ox, oy + h);
+	glVertex2d(gl, oy + h);
+	glVertex2d(gr, oy + h);
+	glVertex2d(ox + w, oy + h);
+
+	// Right
+	glVertex2d(ox + w, oy);
+	glVertex2d(ox + w, oy + h);
+
+	// Left
+	glVertex2d(ox, oy);
+	glVertex2d(ox, oy + h);
+
+	glEnd();
+
+	// Middle Line
+	glColor3ub(0, 0, 255);
+	glLineWidth(2.0f);
+	glBegin(GL_LINES);
+	glVertex2d(ox, oy + h / 2);
+	glVertex2d(ox + w, oy + h / 2);
+	glEnd();
+}
