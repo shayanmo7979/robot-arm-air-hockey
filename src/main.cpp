@@ -17,6 +17,29 @@ void SetTableProjection(const TableConfig &cfg) {
     glLoadIdentity();
 }
 
+void DrawTestTable(const TableConfig &cfg) {
+    glColor3ub(200, 0, 0);
+    DrawRect(0.0, 0.0, cfg.width, cfg.height, false);
+
+    glColor3ub(200, 0, 0);
+    glBegin(GL_LINES);
+    glVertex2d(0.0, cfg.height / 2.0);
+    glVertex2d(cfg.width, cfg.height / 2.0);
+    glEnd();
+
+    double goalLeft = cfg.width/2.0 - cfg.goalWidth / 2.0;
+    double goalRight = cfg.width/2.0 + cfg.goalWidth / 2.0;
+
+    glLineWidth(6);
+    glBegin(GL_LINES);
+    glVertex2d(goalLeft, 0);
+    glVertex2d(goalRight, 0);
+    glVertex2d(goalLeft, cfg.height);
+    glVertex2d(goalRight, cfg.height);
+    glEnd();
+    glLineWidth(1);
+}
+
 void TestArmDrawing(void) {
     TableConfig cfg;
     RobotArm arm(cfg);
@@ -32,19 +55,20 @@ void TestArmDrawing(void) {
         const double step = 5.0 * (PI / 180.0);
         arm.GetJointAngles(t1, t2);
         if (FSKEY_Q==key) { 
-            arm.SetJointAngles(t1+step,t2);; 
+            arm.SetJointAngles(t1+step,t2);
         } else if (FSKEY_A==key) {
-            arm.SetJointAngles(t1-step,t2);; 
+            arm.SetJointAngles(t1-step,t2);
         } else if (FSKEY_W==key) {
-            arm.SetJointAngles(t1,t2+step);; 
+            arm.SetJointAngles(t1,t2+step); 
         } else if (FSKEY_S==key) {
-            arm.SetJointAngles(t1,t2-step);; 
+            arm.SetJointAngles(t1,t2-step); 
         } else if (FSKEY_H==key) {
             arm.SetJointAngles(PI/4,PI/2);
         }
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         SetTableProjection(cfg);
+        DrawTestTable(cfg);
         arm.Draw();
         FsSwapBuffers();
         FsSleep(10);

@@ -43,7 +43,7 @@ double RobotArm::TimeToReach(Vec2 point) const {
 }
 
 bool RobotArm::IsCommandDone(void) const {
-    return true;
+    return state == HOLD;
 }
 
 void RobotArm::Update(double dt) {
@@ -66,6 +66,7 @@ void RobotArm::Draw(void) const {
     glEnd();
     glLineWidth(1);
 
+    glColor3ub(200, 0, 0);
     DrawCircle(paddle.pos.x, paddle.pos.y, paddle.radius);
 }
 
@@ -76,7 +77,7 @@ Vec2 RobotArm::ForwardKinematics(double t1, double t2) const {
 }
 
 bool RobotArm::InverseKinematics(Vec2 point, double &t1, double &t2) const {
-    return true;
+    return false;
 }
 
 void RobotArm::MoveJointsToward(double dt) {
