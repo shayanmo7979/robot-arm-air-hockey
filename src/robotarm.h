@@ -23,7 +23,7 @@ private:
     void MoveJointsToward(double dt);
 
 public:
-    RobotArm();
+    RobotArm(const TableConfig &cfg);
     void SetDifficulty(Difficulty level) override;
     void Reset(void) override;
     void CommandMoveTo(Vec2 target) override;
@@ -33,6 +33,10 @@ public:
     void Update(double dt) override;
     MalletState GetPaddleState(void) const override;
     void Draw(void) const override;
+
+    // Debug helper functions
+    void SetJointAngles(double t1, double t2);
+    void GetJointAngles(double &t1, double &t2) const;
 };
 
 #endif
