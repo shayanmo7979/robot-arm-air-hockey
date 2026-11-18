@@ -108,7 +108,7 @@ PhysicsEvent Puck::WallBounce(const TableConfig& cfg) {
 
 PhysicsEvent Puck::Update(double dt, const TableConfig& cfg) {
 	// 1. Friction slows the puck
-	s.vel = s.vel * fmax(0.0, 1 - cfg.friction * dt);
+	s.vel = s.vel * exp(-cfg.friction * dt);
 
 	// 2. Cap the speed, stop at threshold
 	if (Length(s.vel) > cfg.maxPuckSpeed) {
@@ -139,6 +139,51 @@ bool Puck::CollideWithMallet(const MalletState& m, const TableConfig& cfg) {
 	return true;
 }
 
+Vec2 Puck::PredictPosition(double t, const TableConfig& cfg) const {
+	Puck sim = *this;
+	double substep = 1.0 / 200;
+	for (double el = 0.0; el < t; el += substep) {
+		sim.Update(substep, cfg, false);
+	}
+
+	return sim.s.pos;
+}
+
+PredictResult Puck::PredictLineCrossing(double lineY, double maxTime, const TableConfig& cfg) const {
+	Puck sim = *this;
+	double substep = 1.0 / 200;
+	double time = 0.0;
+
+	PredictResult p;
+	p.found = false;
+	p.point = { 0.0, 0.0 };
+	p.time = 0.0;
+
+	double prevY = 0.0;
+	double curY = 0.0;
+	Vec2 prev = { 0.0, 0.0 };
+
+	for (double el = 0.0; el < maxTime; el += substep) {
+
+		prevY = sim.s.pos.y;
+		prev = sim.s.pos;
+
+		sim.Update(substep, cfg, false);
+		curY = sim.s.pos.y;
+		
+		// lineY was crossed in either direction by the puck
+		if ((prevY - lineY) * (curY - lineY) <= 0 && prevY != curY) {
+			p.found = true;
+			double f = (lineY - prevY) / (curY - prevY);
+			p.point = prev + (sim.s.pos - prev) * f;
+			p.time = el + substep * f;
+			break;
+		}
+	}
+
+	return p;
+}
+
 void Puck::Draw() const {
 	glColor3ub(0, 0, 0);
 	DrawCircle(TABLE_OX + s.pos.x, TABLE_OY + s.pos.y, s.radius);
@@ -151,9 +196,9 @@ Table::Table() {
 
 const TableConfig& Table::GetConfig() const { return cfg; }
 
-double Table::GoalLeft() const { return cfg.width / 2 - cfg.goalWidth / 2; }
+double Table::GoalLeft() const { return cfg.width / 2 - cfg.goalWidth / 2 + ox; }
 
-double Table::GoalRight() const { return cfg.width / 2 + cfg.goalWidth / 2; }
+double Table::GoalRight() const { return cfg.width / 2 + cfg.goalWidth / 2 + oy; }
 
 void Table::Draw() const {
 	double ox = TABLE_OX;
