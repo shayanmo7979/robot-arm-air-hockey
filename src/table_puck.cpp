@@ -146,8 +146,8 @@ void Puck::Draw() const {
 }
 
 Table::Table() {
-	ox = 50;
-	oy = 50;
+	ox = TABLE_OX;
+	oy = TABLE_OY;
 }
 
 const TableConfig& Table::GetConfig() const { return cfg; }
@@ -168,7 +168,7 @@ void Table::Draw(double ox, double oy) const {
 	// Top
 	glVertex2d(ox, oy);
 	glVertex2d(gl, oy);
-	glVertex2d(gr
+	glVertex2d(gr, oy);
 	glVertex2d(ox + w, oy);
 
 	// Bottom
@@ -194,4 +194,55 @@ void Table::Draw(double ox, double oy) const {
 	glVertex2d(ox, oy + h / 2);
 	glVertex2d(ox + w, oy + h / 2);
 	glEnd();
+}
+
+
+// Human Mallet Functions 
+void HumanMallet::Reset(const TableConfig& cfg) {
+	s.radius = cfg.malletRadius;
+	s.pos = { cfg.width / 2, cfg.height * 0.85 };
+	s.vel = { 0,0 };
+}
+
+void HumanMallet::Update(double dt, int mouseX, int mouseY, const TableConfig& cfg) {
+
+	// Convert mouse to table coordinates
+	double mx = mouseX - TABLE_OX;
+	double my = mouseY - TABLE_OY;
+
+	// Clamp to human side
+	if (mx < s.radius) mx = s.radius;
+	if (mx > cfg.width - s.radius) mx = cfg.width - s.radius;
+	if (my < cfg.height / 2 + s.radius) my = cfg.height / 2 + s.radius;
+	if (my > cfg.height - s.radius) my = cfg.height - s.radius;
+
+	// Movement step
+	Vec2 target = { mx, my };
+	Vec2 prev = s.pos;
+	Vec2 step = target - prev;
+
+	// Clamp movement speed
+	double maxStep = cfg.maxHumanSpeed * dt;
+	if (Length(step) > maxStep) {
+		step = Normalize(step) * maxStep;
+	}
+
+	s.pos = s.pos + step;
+	if (dt > 0) s.vel = step / dt;
+
+
+}
+
+void HumanMallet::Draw() const {
+	double cx = s.pos.x + TABLE_OX;
+	double cy = s.pos.y + TABLE_OY;
+
+	glColor3ub(0, 0, 255);
+	DrawCircle(cx, cy, s.radius);
+
+	glColor3ub(0, 0, 125);
+	DrawCircle(cx, cy, s.radius * 0.9);
+
+	glColor3ub(0, 0, 255);
+	DrawCircle(cx, cy, s.radius * 0.35);
 }

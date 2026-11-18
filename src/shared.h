@@ -13,6 +13,10 @@ enum Difficulty { EASY, MEDIUM, HARD };
 
 // Table parameters
 // Restitution is how much momentum is maintained following the collision (not perfectly elastic)
+
+const double TABLE_OX = 50;
+const double TABLE_OY = 50;
+
 struct TableConfig {
 	double width = 400, height = 800, goalWidth = 150;
 	double wallRestitution = 0.9, friction = 0.4, maxPuckSpeed = 1500;

@@ -28,3 +28,12 @@ public:
 	double GoalRight() const;
 	void Draw(double ox, double oy) const;
 };
+
+class HumanMallet {
+public:
+	MalletState s;           // position, velocity, radius
+
+	void Reset(const TableConfig& cfg);
+	void Update(double dt, int mouseX, int mouseY, const TableConfig& cfg);
+	void Draw() const;
+};
