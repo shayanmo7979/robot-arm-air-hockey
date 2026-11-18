@@ -19,8 +19,8 @@ const double TABLE_OY = 50;
 
 struct TableConfig {
 	double width = 400, height = 800, goalWidth = 150;
-	double wallRestitution = 0.9, friction = 0.4, maxPuckSpeed = 1500;
-	double puckRadius = 20, malletRadius = 30, malletRestitution = 0.9, maxHumanSpeed = 2000;
+	double wallRestitution = 0.9, friction = 0.15, maxPuckSpeed = 2200;
+	double puckRadius = 18, malletRadius = 30, malletRestitution = 0.9, maxHumanSpeed = 2700;
 	double restThreshold = 5;
 };
 
@@ -38,12 +38,12 @@ struct GameState {
 Vec2 operator+(Vec2 a, Vec2 b);
 Vec2 operator-(Vec2 a, Vec2 b);
 Vec2 operator*(Vec2 a, Vec2 b);
-Vec2 operator*(Vec2 a, double s);     
-Vec2 operator/(Vec2 a, double s);     
+Vec2 operator*(Vec2 a, double s);
+Vec2 operator/(Vec2 a, double s);
 double Dot(Vec2 a, Vec2 b);
 double Length(Vec2 a);
 Vec2 Normalize(Vec2 a);
-double Clamp(double v, double lo, double hi);   
+double Clamp(double v, double lo, double hi);
 
 void DrawCircle(double cx, double cy, double rad);
 void DrawRect(double x1, double y1, double x2, double y2, bool fill);
@@ -51,3 +51,4 @@ void DrawRoundedRect(double x1, double y1, double x2, double y2, bool fill, doub
 void DrawGradientRect(double x, double y, double w, double h, const int topCol[3], const int botCol[3]);
 void DrawQuad(double x1, double y1, double x2, double y2, double x3, double y3, double x4, double y4);
 double RandRange(double min, double max);
+

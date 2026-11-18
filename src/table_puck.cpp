@@ -10,8 +10,8 @@
 #include "ysglfontdata.h"
 #include "yssimplesound.h"
 
-	
-void Puck::Reset(Vec2 startPos) {
+
+void Puck::Reset(Vec2 startPos, const TableConfig& cfg) {
 	// Reset (Set position to table center)
 	s.pos = startPos;
 	s.vel = { 0, 0 };
@@ -36,7 +36,7 @@ bool Puck::EdgeBounce(Vec2 edge, const TableConfig& cfg) {
 	}
 
 	return false;
-}	
+}
 
 PhysicsEvent Puck::WallBounce(const TableConfig& cfg) {
 
@@ -59,7 +59,7 @@ PhysicsEvent Puck::WallBounce(const TableConfig& cfg) {
 		EdgeBounce({ goalLeft, cfg.height }, cfg) || EdgeBounce({ goalRight, cfg.height }, cfg))
 	{
 		event = EV_WALL_HIT;
-	}		
+	}
 
 	// Left check
 	double leftDist = s.pos.x;
@@ -88,7 +88,7 @@ PhysicsEvent Puck::WallBounce(const TableConfig& cfg) {
 			s.pos.y = s.radius;
 			s.vel.y = -s.vel.y * cfg.wallRestitution;
 			event = EV_WALL_HIT;
-		}			
+		}
 	}
 
 	// Bottom check
@@ -105,8 +105,8 @@ PhysicsEvent Puck::WallBounce(const TableConfig& cfg) {
 
 	return event;
 }
-	
-PhysicsEvent Puck::Update(double dt, const TableConfig &cfg) {
+
+PhysicsEvent Puck::Update(double dt, const TableConfig& cfg) {
 	// 1. Friction slows the puck
 	s.vel = s.vel * fmax(0.0, 1 - cfg.friction * dt);
 
@@ -140,9 +140,8 @@ bool Puck::CollideWithMallet(const MalletState& m, const TableConfig& cfg) {
 }
 
 void Puck::Draw() const {
-	// Draw the puck as a circle at its current position
 	glColor3ub(0, 0, 0);
-	DrawCircle(s.pos.x, s.pos.y, s.radius);
+	DrawCircle(TABLE_OX + s.pos.x, TABLE_OY + s.pos.y, s.radius);
 }
 
 Table::Table() {
@@ -156,15 +155,19 @@ double Table::GoalLeft() const { return cfg.width / 2 - cfg.goalWidth / 2; }
 
 double Table::GoalRight() const { return cfg.width / 2 + cfg.goalWidth / 2; }
 
-void Table::Draw(double ox, double oy) const {
+void Table::Draw() const {
+	double ox = TABLE_OX;
+	double oy = TABLE_OY;
+
 	glColor3ub(0, 0, 0);
-	glLineWidth(4.0f);
+	glLineWidth(8.0f);
 	glBegin(GL_LINES);
 
-	double w = cfg.width, double h = cfg.height;
-	double gl = GoalLeft();
-	double gr = GoalRight();
-	
+	double w = cfg.width;
+	double h = cfg.height;
+	double gl = GoalLeft() + ox;
+	double gr = GoalRight() + ox;
+
 	// Top
 	glVertex2d(ox, oy);
 	glVertex2d(gl, oy);
@@ -188,8 +191,8 @@ void Table::Draw(double ox, double oy) const {
 	glEnd();
 
 	// Middle Line
-	glColor3ub(0, 0, 255);
-	glLineWidth(2.0f);
+	glColor3ub(150, 150, 150);
+	glLineWidth(4.0f);
 	glBegin(GL_LINES);
 	glVertex2d(ox, oy + h / 2);
 	glVertex2d(ox + w, oy + h / 2);
@@ -241,7 +244,7 @@ void HumanMallet::Draw() const {
 	DrawCircle(cx, cy, s.radius);
 
 	glColor3ub(0, 0, 125);
-	DrawCircle(cx, cy, s.radius * 0.9);
+	DrawCircle(cx, cy, s.radius * 0.85);
 
 	glColor3ub(0, 0, 255);
 	DrawCircle(cx, cy, s.radius * 0.35);

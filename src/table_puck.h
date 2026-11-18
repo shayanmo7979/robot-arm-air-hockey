@@ -8,12 +8,12 @@ public:
 
 	void Reset(Vec2 startPos, const TableConfig& cfg);
 	PhysicsEvent Update(double dt, const TableConfig& cfg);
+	bool CollideWithMallet(const MalletState& m, const TableConfig& cfg);
 	void Draw() const;
 
 private:
 	bool EdgeBounce(Vec2 edge, const TableConfig& cfg);
 	PhysicsEvent WallBounce(const TableConfig& cfg);
-	bool CollideWithMallet(const MalletState& m, const TableConfig& cfg);
 };
 
 class Table {
@@ -26,7 +26,7 @@ public:
 	const TableConfig& GetConfig() const;
 	double GoalLeft() const;     // optional helpers
 	double GoalRight() const;
-	void Draw(double ox, double oy) const;
+	void Draw() const;
 };
 
 class HumanMallet {
