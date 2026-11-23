@@ -37,6 +37,7 @@ public:
 
 	void Reset(const TableConfig& cfg);
 	void Update(double dt, int mouseX, int mouseY, const TableConfig& cfg);
+	MalletState GetState() const { return s };
 	void Draw() const;
 };
 

@@ -294,3 +294,51 @@ void HumanMallet::Draw() const {
 	glColor3ub(0, 0, 255);
 	DrawCircle(cx, cy, s.radius * 0.35);
 }
+
+Physics::Physics() {
+	const TableConfig& cfg = table.GetConfig();
+	puck.Reset({ cfg.width / 2, cfg.height / 2 }, cfg);
+	human.Reset(cfg);
+}
+
+void Physics::ResetPuck(PhysicsEvent lastGoal) {
+	const TableConfig& cfg = table.GetConfig();
+	// Serve to the side that was just scored on, or the center if unknown
+	double y = cfg.height / 2;
+	if (lastGoal == EV_GOAL_HUMAN) y = cfg.height * 0.35;   // human scored, robot serves
+	if (lastGoal == EV_GOAL_ROBOT) y = cfg.height * 0.65;   // robot scoreed, human serves
+	puck.Reset({ cfg.width / 2, y }, cfg);
+}
+
+PhysicsEvent Step(double dt, int mouseX, int mouseY, const MalletState& robotMallet) {
+	TableConfig& cfg = table.GetConfig();
+
+	int n = (int)ceil(dt / 0.002);
+	if (n < 1) n = 1;
+
+	double subdt = dt / n;
+
+	PhysicsEvent result = EV_NONE;
+
+	for (int i = 0; i < n; ++i) {
+		human.Update(subdt, mouseX, mouseY, cfg);
+		PhysicsEvent e = puck.Update(subdt, cfg);
+
+		if (e == EV_GOAL_HUMAN || e == EV_GOAL_ROBOT) return e;
+
+		if (puck.CollideWithMallet(human.GetState(), cfg)) e = EV_MALLET_HIT;
+		if (puck.CollideWithMallet(robotMallet, cfg)) e = EV_MALLET_HIT;
+
+		if (e == EV_MALLET_HIT) result = EV_MALLET_HIT;
+		else if (e == EV_WALL_HIT && result == EV_NONE) result = EV_WALL_HIT;
+	}
+
+	return result
+}
+
+
+void Physics::Draw() const {
+	table.Draw();
+	puck.Draw();
+	human.Draw();
+}
