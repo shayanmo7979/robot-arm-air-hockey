@@ -310,8 +310,9 @@ void CheckShotGeometry(const TableConfig &cfg)
 void CheckBlockedShots(const TableConfig &cfg)
 {
 	OpponentLogic opp(cfg);
-	MalletState blocker = MakeMallet(200.0, 600.0, cfg);
-	std::vector<Shot> shots = opp.GenerateShots({200.0, 300.0}, blocker);
+	double centerX = cfg.width / 2.0;
+	MalletState blocker = MakeMallet(centerX, 600.0, cfg);
+	std::vector<Shot> shots = opp.GenerateShots({centerX, 300.0}, blocker);
 
 	bool directBlocked = true;
 	bool someBankOpen = false;
@@ -557,7 +558,7 @@ const int NUM_SCENARIO = 4;
 const Scenario SCENARIOS[NUM_SCENARIO] = {
 	{"1: fast shot at the robot's goal", 260.0, 520.0, -60.0, -850.0, 120.0, 700.0, "DEFEND, block at the line"},
 	{"2: slow puck on robot's half", 260.0, 250.0, 0.0, 0.0, 60.0, 720.0, "ATTACK, strike, RECOVER"},
-	{"3: human blocks the middle", 200.0, 300.0, 0.0, 0.0, 200.0, 600.0, "ATTACK with a bank shot"},
+	{"3: human blocks the middle", 275.0, 300.0, 0.0, 0.0, 275.0, 600.0, "ATTACK with a bank shot"},   // x = table center
 	{"4: puck stays on human's half", 300.0, 500.0, 0.0, 100.0, 100.0, 720.0, "GUARD, shift toward puck"},
 };
 const double SCENARIO_TIME = 6.0;   // stop a scenario after this long
