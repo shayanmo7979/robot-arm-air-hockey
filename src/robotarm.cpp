@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <math.h>
 
 #include "robotarm.h"
 #include "fssimplewindow.h"

@@ -2,6 +2,7 @@
 #include <string.h>
 #include <iostream>
 #include <stdlib.h>         
+#include <math.h>
 
 #include "shared.h"
 #include "robotarm.h"
