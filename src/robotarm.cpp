@@ -3,6 +3,7 @@
 
 #include "robotarm.h"
 #include "fssimplewindow.h"
+#include <math.h>
 
 RobotArm::RobotArm(const TableConfig &config) {
     cfg = config;
