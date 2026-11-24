@@ -18,7 +18,7 @@ const double TABLE_OX = 50;
 const double TABLE_OY = 50;
 
 struct TableConfig {
-	double width = 400, height = 800, goalWidth = 150;
+	double width = 550, height = 900, goalWidth = 200;
 	double wallRestitution = 0.9, friction = 0.15, maxPuckSpeed = 2200;
 	double puckRadius = 18, malletRadius = 30, malletRestitution = 0.9, maxHumanSpeed = 2700;
 	double restThreshold = 5;

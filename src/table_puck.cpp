@@ -210,8 +210,8 @@ void Table::Draw() const {
 
 	double w = cfg.width;
 	double h = cfg.height;
-	double gl = GoalLeft() + ox;
-	double gr = GoalRight() + ox;
+	double gl = GoalLeft();
+	double gr = GoalRight();
 
 	// Top
 	glVertex2d(ox, oy);
