@@ -261,9 +261,14 @@ void GameScreen::DrawHud(void) const
 	glRasterPos2i(20, WINDOW_HEI - 50);
 	YsGlDrawFontBitmap12x16(str);
 
-	snprintf(str, sizeof(str), "Mouse: move mallet   R: re-serve   D: debug view   ESC: back to title   First to %d wins", WIN_SCORE);
-	glRasterPos2i(20, WINDOW_HEI - 25);
-	YsGlDrawFontBitmap8x12(str);
+	// Controls right under the score, so they stay visible even if the bottom of the window is cut off
+	snprintf(str, sizeof(str), "R: re-serve puck   D: debug view (%s)", (showDebug ? "ON" : "OFF"));
+	glRasterPos2i(20, tableBottom + 110);
+	YsGlDrawFontBitmap12x16(str);
+
+	snprintf(str, sizeof(str), "Mouse: move mallet   ESC: back to title   First to %d wins", WIN_SCORE);
+	glRasterPos2i(20, tableBottom + 135);
+	YsGlDrawFontBitmap12x16(str);
 }
 
 // White box with centered text over the middle of the table
