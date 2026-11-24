@@ -12,8 +12,8 @@
 #include "table_puck.h"
 #include "title.h"
 
-const int WINDOW_WID = 500;
-const int WINDOW_HEI = 950;
+const int WINDOW_WID = 750;
+const int WINDOW_HEI = 1200;
 
 class GameScreen
 {
@@ -60,6 +60,7 @@ void GameScreen::Initialize(TitleScreen::RobotChoice choice, Difficulty level)
 	opponent.SetDifficulty(level);
 	opponent.Reset();
 	physics.ResetPuck(EV_NONE);
+	FsPassedTime();
 
 	printf("Game start: %s, %s\n", TitleScreen::RobotName(choice), TitleScreen::DifficultyName(level));
 }
@@ -79,7 +80,14 @@ void GameScreen::RunOneStep(void)
 		return;
 	}
 
-	// TODO (next step): measure dt, physics.Step, PredictPuckPath, opponent.Update, robot->Update, scoring
+	double dt = (double)FsPassedTime() / 1000.0;
+	if (dt > 0.05) { dt = 0.05; }
+
+	// TODO PredictPuckPath from the puck state, then opponent.Update(*robot, puck, human, path, dt)
+
+	robot->Update(dt);
+
+	// TODO physics.Step(dt, mouseX, mouseY, robot->GetPaddleState()), then handle goal events and scoring
 }
 
 void GameScreen::Render(void) const

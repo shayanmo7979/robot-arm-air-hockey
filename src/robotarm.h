@@ -6,7 +6,7 @@
 
 class RobotArm : public Robot {
 private:
-    enum ArmState {HOLD, MOVING, APPROACH, STRIKE, RECOVER};
+    enum ArmState {HOLD, JOINT_MOVE, MOVING, APPROACH, STRIKE, RECOVER};
     ArmState state = HOLD;
     Vec2 base;
     double L1, L2;
@@ -18,12 +18,20 @@ private:
     Vec2 strikePoint, strikeDirection;
     double strikeSpeed;
     MalletState paddle;
+    TableConfig cfg;
+    Vec2 homePoint;
+    double home1, home2;
+    Vec2 carrot, goal;
+    Vec2 approachPoint, strikeEnd;
     Vec2 ForwardKinematics(double t1, double t2) const;
-    // bool InverseKinematics(Vec2 point, double &t1, double &t2) const;
     void MoveJointsToward(double dt);
+    Vec2 ClampToWorkspace(Vec2 p) const;
+    bool AtTarget(void) const;
+    bool StepAlongLine(Vec2 &point, Vec2 end, double a1, double a2, double maxStep, double &n1, double &n2) const;
+    bool FollowLine(Vec2 end, double dt);
 
 public:
-    RobotArm(const TableConfig &cfg);
+    RobotArm(const TableConfig &config);
     void SetDifficulty(Difficulty level) override;
     void Reset(void) override;
     void CommandMoveTo(Vec2 target) override;
@@ -39,6 +47,9 @@ public:
     void SetJointAngles(double t1, double t2);
     void SetTargetAngles(double t1, double t2);
     void GetJointAngles(double &t1, double &t2) const;
+    const char *GetStateName(void) const;
+    Vec2 GetGoal(void) const;
+    void GetStrikeLine(Vec2 &start, Vec2 &end) const;
 };
 
 #endif

@@ -1,27 +1,24 @@
-#include <math.h>
-#include <initializer_list>
 #include <algorithm>
 
 #include "robotarm.h"
 #include "fssimplewindow.h"
 
-RobotArm::RobotArm(const TableConfig &cfg) {
+RobotArm::RobotArm(const TableConfig &config) {
+    cfg = config;
     base = {cfg.width/2, 0};
     L1 = 0.5 * Length(Vec2{cfg.width/2, cfg.height/2});
     L2 = 0.5 * Length(Vec2{cfg.width/2, cfg.height/2});
-    minTheta1 = 0;
+    minTheta1 = -PI/2;
     maxTheta1 = PI;
-    minTheta2 = -170*(PI/180);
+    minTheta2 = 0;
     maxTheta2 = 170*(PI/180);
-    maxJointSpeed = PI;
+    paddle.radius = cfg.malletRadius;
+    SetDifficulty(MEDIUM);
     theta1 = PI/4;
     theta2 = PI/2;
-    target1 = theta1;
-    target2 = theta2;
-    paddle.pos = ForwardKinematics(theta1, theta2);
-    paddle.vel = {0.0, 0.0};
-    paddle.radius = cfg.malletRadius;
-
+    homePoint = {cfg.width/2.0, 0.2*cfg.height};
+    if (!InverseKinematics(homePoint, home1, home2)) { home1 = PI/4; home2 = PI/2; }
+    Reset();
 }
 
 static double MoveToward(double current, double target, double maxStep) {
@@ -39,20 +36,116 @@ void RobotArm::SetDifficulty(Difficulty level) {
     }
 }
 
-void RobotArm::Reset(void){
-    return;
+void RobotArm::Reset(void) {
+    theta1 = home1;
+    theta2 = home2;
+    target1 = home1;
+    target2 = home2;
+    state = HOLD;
+    paddle.pos = ForwardKinematics(home1, home2);
+    paddle.vel = {0.0, 0.0};
+    carrot = paddle.pos;
+    goal = paddle.pos;
+}
+
+Vec2 RobotArm::ClampToWorkspace(Vec2 p) const {
+    double r = paddle.radius;
+    p.x = Clamp(p.x, r, cfg.width - r);
+    p.y = Clamp(p.y, r, cfg.height/2.0 - r);
+
+    double rMin = sqrt(L1*L1 + L2*L2 + 2.0*L1*L2*cos(maxTheta2)) + 1.0;
+    double rMax = fmin(L1 + L2, cfg.height/2.0 - r) - 1.0;
+    Vec2 d = p - base;
+    double dist = Length(d);
+    if (dist < 1e-9) { d = {0.0, 1.0}; dist = 1.0; }
+    Vec2 u = d / dist;
+    if (dist < rMin) {
+        p = base + u*rMin;
+    } else if (dist > rMax) {
+        p = base + u*rMax;
+    }
+    return p;
+}
+
+bool RobotArm::AtTarget(void) const {
+    return theta1 == target1 && theta2 == target2;
+}
+
+bool RobotArm::StepAlongLine(Vec2 &point, Vec2 end, double a1, double a2, double maxStep, double &n1, double &n2) const {
+    double t1, t2;
+    if (InverseKinematics(end, t1, t2) && fabs(t1 - a1) <= maxStep && fabs(t2 - a2) <= maxStep) {
+        point = end;
+        n1 = t1;
+        n2 = t2;
+        return true;
+    }
+
+    Vec2 d = end - point;
+    double rem = Length(d);
+    if (rem < 1e-9) { 
+        n1 = a1; 
+        n2 = a2; 
+        return true; 
+    }
+    Vec2 u = d / rem;
+
+    double lo = 0.0, hi = rem;
+    for (int i = 0; i < 30; i++) {
+        double mid = 0.5*(lo + hi);
+        Vec2 q = ClampToWorkspace(point + u*mid);
+        if (InverseKinematics(q, t1, t2) && fabs(t1 - a1) <= maxStep && fabs(t2 - a2) <= maxStep) {
+            lo = mid;
+        } else {
+            hi = mid;
+        }
+    }
+
+    point = ClampToWorkspace(point + u*lo);
+    if (!InverseKinematics(point, n1, n2)) { n1 = a1; n2 = a2; }
+    return false;
 }
 
 void RobotArm::CommandMoveTo(Vec2 target) {
-    return;
+    goal = ClampToWorkspace(target);
+    carrot = paddle.pos;
+    state = MOVING;
 }
 
 void RobotArm::CommandStrike(Vec2 hitPoint, Vec2 direction, double speed) {
-    return;
+    if (Length(direction) < 1e-9 || speed <= 0.0) { return; }
+    strikePoint = hitPoint;
+    strikeDirection = Normalize(direction);
+    strikeSpeed = speed;
+
+    const double contact = paddle.radius + cfg.puckRadius;
+    const double windup = 50.0;
+    const double followThrough = 1.5 * paddle.radius;
+    approachPoint = ClampToWorkspace(hitPoint - strikeDirection * (contact + windup));
+    strikeEnd = ClampToWorkspace(hitPoint + strikeDirection * followThrough);
+
+    goal = approachPoint;
+    carrot = paddle.pos;
+    state = APPROACH;
 }
 
 double RobotArm::TimeToReach(Vec2 point) const {
-    return -1.0;
+    if (Length(ClampToWorkspace(point) - point) > 1e-6) { return -1.0; }
+    double g1, g2;
+    if (!InverseKinematics(point, g1, g2)) { return -1.0; }
+
+    const int segments = 16;
+    Vec2 start = paddle.pos;
+    double a1 = theta1, a2 = theta2;
+    double total = 0.0;
+    for (int i = 1; i <= segments; i++) {
+        Vec2 q = ClampToWorkspace(start + (point - start) * ((double)i / segments));
+        double b1, b2;
+        if (!InverseKinematics(q, b1, b2)) { return -1.0; }
+        total += fmax(fabs(b1 - a1), fabs(b2 - a2));
+        a1 = b1;
+        a2 = b2;
+    }
+    return total / maxJointSpeed;
 }
 
 bool RobotArm::IsCommandDone(void) const {
@@ -61,13 +154,55 @@ bool RobotArm::IsCommandDone(void) const {
 
 void RobotArm::Update(double dt) {
     Vec2 oldPos = paddle.pos;
-    MoveJointsToward(dt);
+    switch (state) {
+    case HOLD:
+        break;
+    case JOINT_MOVE:
+        MoveJointsToward(dt);
+        if (AtTarget()) { state = HOLD; }
+        break;
+    case MOVING:
+        if (FollowLine(goal, dt)) { state = HOLD; }
+        break;
+    case APPROACH:
+        if (FollowLine(goal, dt)) {
+            goal = strikeEnd;
+            state = STRIKE;
+        }
+        break;
+    case STRIKE: {
+        Vec2 toEnd = goal - carrot;
+        double remaining = Length(toEnd);
+        double stepLen = strikeSpeed * dt;
+        Vec2 next = goal;
+        if (remaining > stepLen) {
+            next = carrot + toEnd / remaining * stepLen;
+        }
+        if (FollowLine(next, dt) && Length(carrot - goal) < 1e-9) {
+            goal = homePoint;
+            state = RECOVER;
+        }
+        break;
+    }
+    case RECOVER:
+        if (FollowLine(goal, dt)) { state = HOLD; }
+        break;
+    }
     paddle.pos = ForwardKinematics(theta1, theta2);
     if (dt>0.0) {
         paddle.vel = (paddle.pos - oldPos) / dt;
     } else {
         paddle.vel = {0.0, 0.0};
     }
+}
+
+bool RobotArm::FollowLine(Vec2 end, double dt) {
+    double n1, n2;
+    bool last = StepAlongLine(carrot, end, theta1, theta2, maxJointSpeed*dt, n1, n2);
+    target1 = n1;
+    target2 = n2;
+    MoveJointsToward(dt);
+    return last && AtTarget();
 }
 
 MalletState RobotArm::GetPaddleState(void) const {
@@ -283,4 +418,26 @@ void RobotArm::GetJointAngles(double &t1, double &t2) const {
 void RobotArm::SetTargetAngles(double t1, double t2) {
     target1 = t1;
     target2 = t2;
+    state = JOINT_MOVE;
+}
+
+const char *RobotArm::GetStateName(void) const {
+    switch (state) {
+    case HOLD: return "HOLD";
+    case JOINT_MOVE: return "JOINT_MOVE";
+    case MOVING: return "MOVING";
+    case APPROACH: return "APPROACH";
+    case STRIKE: return "STRIKE";
+    case RECOVER: return "RECOVER";
+    }
+    return "?";
+}
+
+Vec2 RobotArm::GetGoal(void) const {
+    return goal;
+}
+
+void RobotArm::GetStrikeLine(Vec2 &start, Vec2 &end) const {
+    start = approachPoint;
+    end = strikeEnd;
 }
