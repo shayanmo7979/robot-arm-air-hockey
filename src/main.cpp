@@ -140,6 +140,14 @@ void GameScreen::RunOneStep(void)
 		return;
 	}
 
+	if(key == FSKEY_R)
+	{
+		// Re-serve a stuck puck (e.g. pushed into a corner): no score change
+		lastGoal = EV_NONE;
+		Serve();
+		return;
+	}
+
 	PlayOneStep(dt);
 }
 
@@ -253,7 +261,7 @@ void GameScreen::DrawHud(void) const
 	glRasterPos2i(20, WINDOW_HEI - 50);
 	YsGlDrawFontBitmap12x16(str);
 
-	snprintf(str, sizeof(str), "Mouse: move mallet   D: debug view   ESC: back to title   First to %d wins", WIN_SCORE);
+	snprintf(str, sizeof(str), "Mouse: move mallet   R: re-serve   D: debug view   ESC: back to title   First to %d wins", WIN_SCORE);
 	glRasterPos2i(20, WINDOW_HEI - 25);
 	YsGlDrawFontBitmap8x12(str);
 }
