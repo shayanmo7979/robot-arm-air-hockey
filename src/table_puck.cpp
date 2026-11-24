@@ -38,7 +38,7 @@ bool Puck::EdgeBounce(Vec2 edge, const TableConfig& cfg) {
 	return false;
 }
 
-PhysicsEvent Puck::WallBounce(const TableConfig& cfg) {
+PhysicsEvent Puck::WallBounce(const TableConfig& cfg, bool goalsOpen) {
 
 	double cent = cfg.width / 2;
 	double goalLeft = cent - cfg.goalWidth / 2;
@@ -106,7 +106,7 @@ PhysicsEvent Puck::WallBounce(const TableConfig& cfg) {
 	return event;
 }
 
-PhysicsEvent Puck::Update(double dt, const TableConfig& cfg) {
+PhysicsEvent Puck::Update(double dt, const TableConfig& cfg, bool goalsOpen) {
 	// 1. Friction slows the puck
 	s.vel = s.vel * exp(-cfg.friction * dt);
 
@@ -310,8 +310,8 @@ void Physics::ResetPuck(PhysicsEvent lastGoal) {
 	puck.Reset({ cfg.width / 2, y }, cfg);
 }
 
-PhysicsEvent Step(double dt, int mouseX, int mouseY, const MalletState& robotMallet) {
-	TableConfig& cfg = table.GetConfig();
+PhysicsEvent Physics::Step(double dt, int mouseX, int mouseY, const MalletState& robotMallet) {
+	const TableConfig& cfg = table.GetConfig();
 
 	int n = (int)ceil(dt / 0.002);
 	if (n < 1) n = 1;
@@ -333,7 +333,7 @@ PhysicsEvent Step(double dt, int mouseX, int mouseY, const MalletState& robotMal
 		else if (e == EV_WALL_HIT && result == EV_NONE) result = EV_WALL_HIT;
 	}
 
-	return result
+	return result;
 }
 
 

@@ -1,4 +1,6 @@
 #include <math.h>
+#include <initializer_list>
+#include <algorithm>
 
 #include "robotarm.h"
 #include "fssimplewindow.h"
@@ -9,8 +11,8 @@ RobotArm::RobotArm(const TableConfig &cfg) {
     L2 = 0.5 * Length(Vec2{cfg.width/2, cfg.height/2});
     minTheta1 = 0;
     maxTheta1 = PI;
-    minTheta2 = -150*(PI/180);
-    maxTheta2 = 150*(PI/180);
+    minTheta2 = -170*(PI/180);
+    maxTheta2 = 170*(PI/180);
     maxJointSpeed = PI;
     theta1 = PI/4;
     theta2 = PI/2;
@@ -22,8 +24,19 @@ RobotArm::RobotArm(const TableConfig &cfg) {
 
 }
 
+static double MoveToward(double current, double target, double maxStep) {
+    double error = target - current;
+    if (fabs(error) <= maxStep) { return target; }
+    if (error > 0.0) { return current + maxStep; }
+    return current - maxStep;
+}
+
 void RobotArm::SetDifficulty(Difficulty level) {
-    return;
+    switch (level) {
+        case EASY: maxJointSpeed = 2.0; break;
+        case MEDIUM: maxJointSpeed = 4.0; break;
+        case HARD: maxJointSpeed = 6.0; break;
+    }
 }
 
 void RobotArm::Reset(void){
@@ -47,7 +60,14 @@ bool RobotArm::IsCommandDone(void) const {
 }
 
 void RobotArm::Update(double dt) {
-    return;
+    Vec2 oldPos = paddle.pos;
+    MoveJointsToward(dt);
+    paddle.pos = ForwardKinematics(theta1, theta2);
+    if (dt>0.0) {
+        paddle.vel = (paddle.pos - oldPos) / dt;
+    } else {
+        paddle.vel = {0.0, 0.0};
+    }
 }
 
 MalletState RobotArm::GetPaddleState(void) const {
@@ -77,11 +97,51 @@ Vec2 RobotArm::ForwardKinematics(double t1, double t2) const {
 }
 
 bool RobotArm::InverseKinematics(Vec2 point, double &t1, double &t2) const {
-    return false;
+    double dx = point.x - base.x;
+    double dy = point.y - base.y;
+    double D = (dx*dx + dy*dy - L1*L1 - L2*L2) / (2.0*L1*L2);
+
+    if (D > 1.0 + 1e-9 || D < -1.0 - 1e-9) {
+        return false;
+    }
+    D = Clamp(D, -1.0, 1.0);
+
+    bool found = false;
+    double best1 = 0.0, best2 = 0.0;
+    double bestCost = 0.0;
+
+    for (double sign : {1.0, -1.0}) {
+        double cand2 = sign * acos(D);
+        double cand1 = atan2(dy, dx) - atan2(L2*sin(cand2), L1 + L2*cos(cand2));   
+
+        while (cand1 > PI) { cand1 -= 2.0*PI; }
+        while (cand1 <= -PI) { cand1 += 2.0*PI; }
+
+        if (cand1 < minTheta1 || cand1 > maxTheta1 || cand2 < minTheta2 || cand2 > maxTheta2) { continue; }
+
+        double cost = fmax(fabs(cand1 - theta1), fabs(cand2 - theta2));
+
+        if (!found || cost < bestCost) {
+            found = true;
+            best1 = cand1;
+            best2 = cand2;
+            bestCost = cost;
+        }
+    }
+
+    if (!found) { return false; }
+
+    t1 = best1;
+    t2 = best2;
+    return true;
 }
 
 void RobotArm::MoveJointsToward(double dt) {
-    return;
+    double maxStep = maxJointSpeed*dt;
+    theta1 = MoveToward(theta1,target1, maxStep);
+    theta2 = MoveToward(theta2,target2, maxStep);
+    theta1 = Clamp(theta1, minTheta1, maxTheta1);
+    theta2 = Clamp(theta2, minTheta2, maxTheta2);
 }
 
 // Debug helper functions
@@ -94,4 +154,9 @@ void RobotArm::SetJointAngles(double t1, double t2) {
 void RobotArm::GetJointAngles(double &t1, double &t2) const {
     t1 = theta1;
     t2 = theta2;
+}
+
+void RobotArm::SetTargetAngles(double t1, double t2) {
+    target1 = t1;
+    target2 = t2;
 }

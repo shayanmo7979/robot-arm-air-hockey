@@ -19,7 +19,7 @@ private:
     double strikeSpeed;
     MalletState paddle;
     Vec2 ForwardKinematics(double t1, double t2) const;
-    bool InverseKinematics(Vec2 point, double &t1, double &t2) const;
+    // bool InverseKinematics(Vec2 point, double &t1, double &t2) const;
     void MoveJointsToward(double dt);
 
 public:
@@ -32,10 +32,12 @@ public:
     bool IsCommandDone(void) const override;
     void Update(double dt) override;
     MalletState GetPaddleState(void) const override;
+    bool InverseKinematics(Vec2 point, double &t1, double &t2) const;
     void Draw(void) const override;
 
     // Debug helper functions
     void SetJointAngles(double t1, double t2);
+    void SetTargetAngles(double t1, double t2);
     void GetJointAngles(double &t1, double &t2) const;
 };
 
