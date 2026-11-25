@@ -1,7 +1,7 @@
 // Opponent Logic implementation.  See opponent.h for the overview of the four modes.
 // Coordinates (from shared.h): pixels, origin top-left, y down.  Robot goal at the top (y = 0),
 // human goal at the bottom (y = cfg.height).  So a puck coming at the robot has vel.y < 0.
-
+#include <algorithm>
 #include <math.h>
 
 #include "fssimplewindow.h"
@@ -108,7 +108,7 @@ static void BouncePost(PuckState &puck, Vec2 post, const TableConfig &cfg)
 void StepFreePuck(PuckState &puck, const TableConfig &cfg, double dt)
 {
 	// Friction, speed cap, stop when very slow, then move
-	puck.vel = puck.vel * fmax(0.0, 1.0 - cfg.friction * dt);
+	puck.vel = puck.vel * std::max(0.0, 1.0 - cfg.friction * dt);
 	if(Length(puck.vel) > cfg.maxPuckSpeed)
 	{
 		puck.vel = Normalize(puck.vel) * cfg.maxPuckSpeed;

@@ -56,7 +56,7 @@ Vec2 RobotArm::ClampToWorkspace(Vec2 p) const {
     p.y = Clamp(p.y, r, cfg.height/2.0 - r);
 
     double rMin = sqrt(L1*L1 + L2*L2 + 2.0*L1*L2*cos(maxTheta2)) + 1.0;
-    double rMax = fmin(L1 + L2, cfg.height/2.0 - r) - 1.0;
+    double rMax = std::min(L1 + L2, cfg.height/2.0 - r) - 1.0;
     Vec2 d = p - base;
     double dist = Length(d);
     if (dist < 1e-9) { d = {0.0, 1.0}; dist = 1.0; }
@@ -143,7 +143,7 @@ double RobotArm::TimeToReach(Vec2 point) const {
         Vec2 q = ClampToWorkspace(start + (point - start) * ((double)i / segments));
         double b1, b2;
         if (!InverseKinematics(q, b1, b2)) { return -1.0; }
-        total += fmax(fabs(b1 - a1), fabs(b2 - a2));
+        total += std::max(fabs(b1 - a1), fabs(b2 - a2));
         a1 = b1;
         a2 = b2;
     }
@@ -380,7 +380,7 @@ bool RobotArm::InverseKinematics(Vec2 point, double &t1, double &t2) const {
 
         if (cand1 < minTheta1 || cand1 > maxTheta1 || cand2 < minTheta2 || cand2 > maxTheta2) { continue; }
 
-        double cost = fmax(fabs(cand1 - theta1), fabs(cand2 - theta2));
+        double cost = std::max(fabs(cand1 - theta1), fabs(cand2 - theta2));
 
         if (!found || cost < bestCost) {
             found = true;

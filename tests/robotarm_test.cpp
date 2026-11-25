@@ -1,7 +1,8 @@
 #include <stdio.h>
 #include <string.h>
 #include <iostream>
-#include <stdlib.h>         
+#include <stdlib.h>
+#include <algorithm>         
 #include <math.h>
 
 #include "shared.h"
@@ -87,11 +88,11 @@ void TestInverseKinematics(void) {
             failures++;
             continue;
         }
-        maxAngleError = fmax(maxAngleError, fmax(fabs(t1 - a), fabs(t2 - b)));
+        maxAngleError = std::max(maxAngleError, std::max(fabs(t1 - a), fabs(t2 - b)));
 
         arm.SetJointAngles(t1, t2);                
         Vec2 q = arm.GetPaddleState().pos;
-        maxPosError = fmax(maxPosError, Length(q - p));
+        maxPosError = std::max(maxPosError, Length(q - p));
     }
     printf("IK round trip: %d poses, %d failures (expect 0)\n", N, failures);
     printf("IK max position error = %.3e px, max angle error = %.3e rad\n", maxPosError, maxAngleError);
@@ -287,13 +288,13 @@ void TestJointSpeedLimit(void) {
             steps++;
             double a1, b1;
             arm.GetJointAngles(a1,b1);
-            maxRate = fmax(maxRate, fmax(fabs(a1-a0), fabs(b1-b0))/dt);
+            maxRate = std::max(maxRate, std::max(fabs(a1-a0), fabs(b1-b0))/dt);
             if (a1 == c.g1 && b1 == c.g2) {
                 arrived = true;
                 break;
             }
         }
-        double predicted = fmax(fabs(c.g1 - c.s1), fabs(c.g2 - c.s2)) / c.speed;
+        double predicted = std::max(fabs(c.g1 - c.s1), fabs(c.g2 - c.s2)) / c.speed;
         printf("speed %.0f: arrived=%d after %.2f s (predicted %.3f s), max joint rate %.3f\n",
                c.speed, arrived, steps * dt, predicted, maxRate);
     }
@@ -319,9 +320,9 @@ void TestOneElbowSide(void) {
         arm.Update(0.01);
         steps++;
         Vec2 p = arm.GetPaddleState().pos;
-        maxY = fmax(maxY, p.y);
-        minX = fmin(minX, p.x);
-        maxX = fmax(maxX, p.x);
+        maxY = std::max(maxY, p.y);
+        minX = std::min(minX, p.x);
+        maxX = std::max(maxX, p.x);
         double a, b;
         arm.GetJointAngles(a, b);
         if (a == g1 && b == g2) { break; }
@@ -337,15 +338,15 @@ void TestOneElbowSide(void) {
 
     maxY = -1e9; minX = 1e9; maxX = -1e9;
     for (int n = 0; n < 400; n++) {
-        Vec2 target = {150.0 + 250.0 * fmin(1.0, n / 300.0), 80.0};
+        Vec2 target = {150.0 + 250.0 * std::min(1.0, n / 300.0), 80.0};
         if (arm2.InverseKinematics(target, t1, t2)) {
             arm2.SetTargetAngles(t1, t2);
         }
         arm2.Update(0.01);
         Vec2 p = arm2.GetPaddleState().pos;
-        maxY = fmax(maxY, p.y);
-        minX = fmin(minX, p.x);
-        maxX = fmax(maxX, p.x);
+        maxY = std::max(maxY, p.y);
+        minX = std::min(minX, p.x);
+        maxX = std::max(maxX, p.x);
     }
     Vec2 end = arm2.GetPaddleState().pos;
     printf("line y=80: end (%.1f, %.1f), max y %.0f, x %.0f..%.0f (expect (400.0, 80.0), 80, 150..400)\n",
@@ -354,7 +355,7 @@ void TestOneElbowSide(void) {
 
 double BoxViolation(const TableConfig &cfg, Vec2 p) {
     double r = cfg.malletRadius;
-    return fmax(fmax(r - p.x, p.x - (cfg.width - r)), fmax(r - p.y, p.y - (cfg.height / 2.0 - r)));
+    return std::max(std::max(r - p.x, p.x - (cfg.width - r)), std::max(r - p.y, p.y - (cfg.height / 2.0 - r)));
 }
 
 double OffLine(Vec2 a, Vec2 b, Vec2 p) {
@@ -399,8 +400,8 @@ void TestCommandMoveTo(void) {
             arm.Update(0.01);
             steps++;
             Vec2 p = arm.GetPaddleState().pos;
-            maxOff = fmax(maxOff, OffLine(start, g, p));
-            maxOut = fmax(maxOut, BoxViolation(cfg, p));
+            maxOff = std::max(maxOff, OffLine(start, g, p));
+            maxOut = std::max(maxOut, BoxViolation(cfg, p));
         }
         Vec2 p = arm.GetPaddleState().pos;
         printf("move to (%.0f, %.0f): end (%.1f, %.1f) after %.2f s, max off-line %.2f px, in box %s\n",
@@ -410,9 +411,9 @@ void TestCommandMoveTo(void) {
     RobotArm arm(cfg);
     double maxOut = -1e9;
     for (int n = 0; n < 400; n++) {
-        arm.CommandMoveTo({150.0 + 250.0 * fmin(1.0, n / 300.0), 80.0});
+        arm.CommandMoveTo({150.0 + 250.0 * std::min(1.0, n / 300.0), 80.0});
         arm.Update(0.01);
-        maxOut = fmax(maxOut, BoxViolation(cfg, arm.GetPaddleState().pos));
+        maxOut = std::max(maxOut, BoxViolation(cfg, arm.GetPaddleState().pos));
     }
     Vec2 p = arm.GetPaddleState().pos;
     printf("every frame along y=80: end (%.1f, %.1f), %s, in box %s (expect (400.0, 80.0), HOLD, yes)\n",
@@ -439,12 +440,12 @@ void TestMoveBounds(void) {
             while (!arm.IsCommandDone() && steps < 2000) {
                 arm.Update(0.01);
                 steps++;
-                out = fmax(out, BoxViolation(cfg, arm.GetPaddleState().pos));
+                out = std::max(out, BoxViolation(cfg, arm.GetPaddleState().pos));
             }
             if (!arm.IsCommandDone()) { notDone++; }
-            if (out > 1e-6) { leftBox++; worst = fmax(worst, out); }
+            if (out > 1e-6) { leftBox++; worst = std::max(worst, out); }
             sumTime += steps * 0.01;
-            maxTime = fmax(maxTime, steps * 0.01);
+            maxTime = std::max(maxTime, steps * 0.01);
         }
         printf("bounds difficulty %d: %d moves, left box %d (worst %.2f px), never finished %d, avg %.2f s, max %.2f s\n",
                level, N, leftBox, worst, notDone, sumTime / N, maxTime);
@@ -472,7 +473,7 @@ void TestTimeToReach(void) {
                 arm.Update(0.001);
                 steps++;
             }
-            maxErr = fmax(maxErr, fabs(steps * 0.001 - pred));
+            maxErr = std::max(maxErr, fabs(steps * 0.001 - pred));
         }
         printf("TimeToReach difficulty %d: max |sim - pred| = %.4f s, unreachable %d / 1000 (expect <= 0.0014 s, 61)\n",
                level, maxErr, skipped);
@@ -510,10 +511,10 @@ void TestStrikeMetrics(void) {
                 arm.Update(0.005);
                 steps++;
                 MalletState m = arm.GetPaddleState();
-                maxOut = fmax(maxOut, BoxViolation(cfg, m.pos));
+                maxOut = std::max(maxOut, BoxViolation(cfg, m.pos));
                 if (strcmp(arm.GetStateName(), "STRIKE") == 0) {
                     Vec2 rel = m.pos - hit;
-                    maxOff = fmax(maxOff, Length(rel - dir * Dot(rel, dir)));
+                    maxOff = std::max(maxOff, Length(rel - dir * Dot(rel, dir)));
                     if (contactSpeed < 0.0 && Dot(rel, dir) >= -contact) {
                         contactSpeed = Dot(m.vel, dir);
                     }
